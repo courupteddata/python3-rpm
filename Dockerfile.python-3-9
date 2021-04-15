@@ -1,0 +1,10 @@
+FROM centos:7
+RUN yum clean all && \
+    yum update -y && \
+    yum install git yum-utils make flex g++-multilib libgmp3-dev libgmp-dev -y && \
+    yum-builddep python3 -y && \
+    mkdir -p /opt/src && \
+    cd /opt/src && \
+    git clone --branch 3.9 --single-branch https://github.com/python/cpython
+RUN cd /opt/src && git clone --branch releases/gcc-10 --single-branch https://gcc.gnu.org/git/gcc.git gcc-release && cd gcc-release && ./contrib/download_prerequisites && ./configure --disable-multilib --enable-languages=c,c++ && make -j && make install
+RUN mkdir -p /opt/built && cd /opt/src/cpython && ./configure --enable-optimizations --prefix /opt/built && make clean && make -s -j
