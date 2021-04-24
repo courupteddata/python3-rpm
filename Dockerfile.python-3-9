@@ -1,4 +1,4 @@
-FROM centos:7
+FROM centos:7 AS python3-builder
 USER root
 RUN groupadd -r swuser -g 433 && \
     useradd -u 431 -r -g swuser -s /sbin/nologin -c "Build user" swuser && \
@@ -17,3 +17,15 @@ RUN mkdir -p /tmp/build && \
     make -s -j install && \
     rm -rf /tmp/build/cpython
 
+FROM centos:7
+RUN groupadd -r swuser -g 433 && \
+    useradd -u 431 -r -g swuser -s /sbin/nologin -c "Build user" swuser && \
+    yum clean all && yum update -y && yum install rpmdevtools -y
+USER swuser
+RUN mkdir -p /tmp/rpm/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+WORKDIR /tmp/rpm/BUILDROOT/opt/python3-9
+COPY --from=python3-builder /tmp/build/built .
+ADD --chown=swuser:swuser ./python3-9.spec /tmp/rpm/SPECS
+WORKDIR /tmp/rpm
+RUN rpmbuild -bp -v --define '_python3version 3.9.4' --define "_topdir `pwd`" --buildroot=/tmp/rpm/BUILDROOT SPECS/python3-9.spec 
+USER root
