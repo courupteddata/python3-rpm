@@ -1,16 +1,19 @@
 FROM centos:7
-RUN yum clean all && \
-    yum update -y && \
-    yum install git yum-utils make openssl-devel bzip2-devel libffi-devel -y && \
-    yum-builddep python3 -y && \
+USER root
+RUN groupadd -r swuser -g 433 && \
+    useradd -u 431 -r -g swuser -s /sbin/nologin -c "Build user" swuser && \
     yum clean all && \
-    mkdir -p /opt/src && \
-    cd /opt/src && \
-    git clone --branch 3.9 --single-branch https://github.com/python/cpython && \
-    mkdir -p /opt/built && \
-    cd /opt/src/cpython && \
-    ./configure --enable-optimizations --prefix /opt/built --with-system-ffi --with-computed-gotos && \
+    yum update -y && \
+    yum install git make openssl-devel openssl-static bzip2-devel libffi-devel gcc-c++ autoconfbluez-libs-devel expat-devel gdb gdbm-devel gmp-devel libX11-devel libappstream-glib libtirpc-devel mesa-libGL-devel ncurses-devel net-tools readline-devel sqlite-devel systemtap-sdt-devel tcl-devel tix-devel tk-devel xz-devel  -y && \
+    yum clean all
+USER swuser
+RUN mkdir -p /tmp/build && \
+    cd /tmp/build && \
+    git clone --depth 1 --branch 3.9 --single-branch https://github.com/python/cpython.git cpython && \
+    mkdir -p /tmp/build/built && \
+    cd /tmp/build/cpython && \
+    ./configure --enable-optimizations --prefix /tmp/build/built --with-system-ffi --with-computed-gotos && \
     make clean && \
     make -s -j install && \
-    rm -rf /opt/src
+    rm -rf /tmp/build/cpython
 

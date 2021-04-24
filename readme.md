@@ -14,3 +14,5 @@ Attempt for that is in Dockerfile.python-3-9_gcc-10
 Reasonable.
 Build took about 173.2s and required different flags. Resulted in a 812.59MiB image that honestly can be shrunk down if desired.
 The actual built folder for python3 takes up 231MiB.
+
+Thinking of removing builddep because it relies on the source RPMS which might add to the weight of the image.
