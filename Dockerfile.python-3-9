@@ -23,9 +23,8 @@ RUN groupadd -r swuser -g 433 && \
     yum clean all && yum update -y && yum install rpmdevtools -y
 USER swuser
 RUN mkdir -p /tmp/rpm/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
-WORKDIR /tmp/rpm/BUILDROOT/opt/python3-9
-COPY --from=python3-builder /tmp/build/built .
+COPY --from=python3-builder /tmp/build/built /tmp/rpm/BUILD
 ADD --chown=swuser:swuser ./python3-9.spec /tmp/rpm/SPECS
 WORKDIR /tmp/rpm
-RUN rpmbuild -bp -v --define '_python3version 3.9.4' --define "_topdir `pwd`" --buildroot=/tmp/rpm/BUILDROOT SPECS/python3-9.spec 
+RUN rpmbuild -bb -v --define "_python3version $(/tmp/rpm/BUILD/bin/python3 --version | cut -d" " -f2)" --define "_topdir $(pwd)" --define "_installdir /opt/python3-9" --buildroot=/tmp/rpm/BUILDROOT SPECS/python3-9.spec 
 USER root
