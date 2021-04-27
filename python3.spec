@@ -8,31 +8,25 @@
 Name:           python3
 Version:        %{_python3version}
 Release:        1%{?dist}
-Summary:        Example Python3.9 RPM
+Summary:        Example Python3 RPM built from %{_python3branch}
 License:        Python
-# URL:            
-# Source0:        
+  
 
 %description
-Installs python3.9 in %{_installdir} directory built from https://github.com/python/cpython branch 3.9
+Installs python3 in %{_installdir} directory built from https://github.com/python/cpython branch %{_python3branch}
 
 %prep
-
+# Nothing 
 
 %build
-
+# Nothing
 
 %install
 # Create the install folder
 mkdir -p %{buildroot}%{_installdir}
 
-# Remove references to the prefix used for the build
-sed -i 's|^#!/tmp.*|#!'"%{_installdir}/bin/python3"'|g' %{buildroot}/../BUILD/bin/*
-sed -i 's|^#!/tmp.*|#!'"%{_installdir}/bin/python3"'|g' %{buildroot}/../BUILD/lib/python3*/config*/python-config.py
+# Fix annoying path in cgi.py
 sed -i 's|^#! /usr.*|#!'"%{_installdir}/bin/python3"'|g' %{buildroot}/../BUILD/lib/python3*/cgi.py
-
-# Make sure no references exist
-
 
 cp -ar %{buildroot}/../BUILD/* %{buildroot}/%{_installdir}
 

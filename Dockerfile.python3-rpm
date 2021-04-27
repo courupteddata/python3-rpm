@@ -1,0 +1,34 @@
+FROM centos:7 AS python3-builder
+USER root
+RUN groupadd -r swuser -g 433 && \
+    useradd -u 431 -r -g swuser -s /sbin/nologin -c "Build user" swuser && \
+    yum clean all && \
+    yum update -y && \
+    yum install git make openssl-devel openssl-static bzip2-devel libffi-devel gcc-c++ autoconf bluez-libs-devel expat-devel gdb gdbm-devel gmp-devel libX11-devel libappstream-glib libtirpc-devel mesa-libGL-devel ncurses-devel net-tools readline-devel sqlite-devel systemtap-sdt-devel tcl-devel tix-devel tk-devel xz-devel  -y && \
+    yum clean all
+ARG python3_prefix="/opt/python3"
+ARG python3_branch="3.9"
+RUN mkdir -p ${python3_prefix} && chown swuser:swuser ${python3_prefix}
+USER swuser
+RUN mkdir -p /tmp/build && \
+    cd /tmp/build && \
+    git clone --depth 1 --branch ${python3_branch} --single-branch https://github.com/python/cpython.git cpython && \
+    cd /tmp/build/cpython && \
+    ./configure --enable-optimizations --prefix ${python3_prefix} --with-system-ffi --with-computed-gotos && \
+    make clean && \
+    make -s -j install && \
+    rm -rf /tmp/build/cpython
+
+FROM centos:7
+RUN groupadd -r swuser -g 433 && \
+    useradd -u 431 -r -g swuser -s /sbin/nologin -c "Build user" swuser && \
+    yum clean all && yum update -y && yum install rpmdevtools -y
+ARG python3_prefix="/opt/python3"
+ARG python3_branch="3.9"
+USER swuser
+RUN mkdir -p /tmp/rpm/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+COPY --from=python3-builder ${python3_prefix} /tmp/rpm/BUILD
+ADD --chown=swuser:swuser ./python3.spec /tmp/rpm/SPECS
+WORKDIR /tmp/rpm
+RUN rpmbuild -bb -v --define "_python3branch ${python3_branch}" --define "_python3version $(/tmp/rpm/BUILD/bin/python3 --version | cut -d" " -f2)" --define "_topdir $(pwd)" --define "_installdir ${python3_prefix}" --buildroot=/tmp/rpm/BUILDROOT SPECS/python3.spec 
+USER root
