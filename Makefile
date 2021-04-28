@@ -7,7 +7,7 @@ BUILD_TAG="$(APP_NAME):$(BRANCH)"
 
 BUILD_INSTANCE="$(APP_NAME)-$(BRANCH)-temp"
 
-.PHONY clean
+.PHONY: clean
 
 all:
 	release
@@ -15,7 +15,7 @@ all:
 release:
 	rpm
 
-rpm: build-image create-instance copy-rpm remove-instance
+rpm: | clean build-image create-instance copy-rpm remove-instance
 	
 build-image:
 	## To do a tag just set the branch to v3.9.4
